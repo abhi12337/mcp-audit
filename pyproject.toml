@@ -38,3 +38,7 @@ where = ["src"]
 testpaths = ["tests"]
 addopts = "-q"
 pythonpath = ["src"]
+
+[project.urls]
+Homepage = "https://github.com/abhi12337/mcp-audit"
+Issues = "https://github.com/abhi12337/mcp-audit/issues"
