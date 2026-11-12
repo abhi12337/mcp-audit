@@ -746,11 +746,23 @@ class _FuncAnalysis:
         return " ".join(out)
 
 
-def scan_python(rel: str, text: str) -> list[Finding]:
+def parse_failure(exc: BaseException) -> str:
+    if isinstance(exc, SyntaxError):
+        return f"syntax error line {exc.lineno}" if exc.lineno else "syntax error"
+    if isinstance(exc, RecursionError):
+        return "too deeply nested to parse"
+    return f"could not be parsed ({exc})"
+
+
+def scan_python(rel: str, text: str, skipped: list[dict] | None = None) -> list[Finding]:
+    """Findings for one file. A file `ast` cannot parse yields nothing and, when `skipped` is
+    given, is appended to it as {"path", "reason"} so it can be reported."""
     if not is_mcp_python(text):
         return []
     try:
         mod = PyModule(rel, text)
-    except (SyntaxError, ValueError, RecursionError):
+    except (SyntaxError, ValueError, RecursionError) as e:
+        if skipped is not None:
+            skipped.append({"path": rel, "reason": parse_failure(e)})
         return []
     return mod.run()

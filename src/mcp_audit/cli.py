@@ -90,7 +90,13 @@ def cmd_scan(args) -> int:
             for f in r.findings:
                 if f.file and not f.file.startswith("~/") and label not in (".", "~"):
                     f.file = f"{label.rstrip('/')}/{f.file}".replace("\\", "/")
+            for x in r.skipped:
+                if label not in (".", "~"):
+                    x["path"] = f"{label.rstrip('/')}/{x['path']}".replace("\\", "/")
     exit_code = _exit_code(findings, args.fail_on)
+    skipped = [x for r in results for x in r.skipped]
+    for x in skipped:
+        print(f"warning: {x['path']}: {x['reason']}; file not scanned", file=sys.stderr)
     shown = _filter_min(findings, args.min_severity)
     files = sum(r.files_scanned for r in results)
     configs = [c for r in results for c in r.config_files]
@@ -99,13 +105,16 @@ def cmd_scan(args) -> int:
     if args.json:
         sys.stdout.write(render_json(shown, meta={
             "targets": [r.root for r in results], "files_scanned": files, "config_files": configs,
-            "servers_configured": servers, "server_source_files": server_files, "exit_code": exit_code,
+            "servers_configured": servers, "server_source_files": server_files, "skipped": skipped,
+            "exit_code": exit_code,
         }))
     else:
         label = ", ".join(paths + (["user MCP configs"] if args.user_configs else []))
         header = [f"Scanned {label}",
                   f"{files} file(s): {len(configs)} MCP config file(s) with {servers} server(s), "
                   f"{len(server_files)} MCP server source file(s)"]
+        if skipped:
+            header.append(f"{len(skipped)} file(s) could not be parsed and were not scanned (see warnings)")
         if not configs and not server_files:
             header.append("Nothing MCP-related found (no client configs, no files importing the MCP SDK).")
         sys.stdout.write(render_text(shown, header=header, color=use_color(force=False if args.no_color else None),

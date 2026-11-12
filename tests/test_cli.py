@@ -168,3 +168,13 @@ def test_every_finding_has_location_evidence_and_fix(capsys, name):
     _, out, _ = run(capsys, "scan", str(FIX / name), "--json")
     for f in json.loads(out)["findings"]:
         assert f["file"] and f["line"] and f["evidence"] and f["fix"]
+
+
+def test_unparseable_python_server_is_warned_not_silently_clean(capsys, tmp_path):
+    (tmp_path / "server.py").write_text("from mcp.server.fastmcp import FastMCP\nmcp = FastMCP('x')\nx = = 1\n")
+    code, out, err = run(capsys, "scan", str(tmp_path), "--no-color")
+    assert code == 0                                  # exit code still depends on findings only
+    assert "warning: server.py: syntax error line 3; file not scanned" in err
+    assert "1 file(s) could not be parsed" in out
+    code, out, _ = run(capsys, "scan", str(tmp_path), "--json")
+    assert json.loads(out)["skipped"] == [{"path": "server.py", "reason": "syntax error line 3"}]

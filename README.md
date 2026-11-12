@@ -53,7 +53,7 @@ All output below was produced by running this version of the tool on the demo pr
 `mcp-audit scan demo-mcp/.cursor/mcp.json --brief` (the config alone):
 
 ```text
-mcp-audit 0.1.0
+mcp-audit 0.1.1
 Scanned demo-mcp/.cursor/mcp.json
 1 file(s): 1 MCP config file(s) with 7 server(s), 0 MCP server source file(s)
 
@@ -141,7 +141,7 @@ HIGH     MCP104  Tool fetches arbitrary URLs (SSRF)
 <summary>The whole demo project: <code>mcp-audit scan demo-mcp --brief</code> (config + Python server + TypeScript server)</summary>
 
 ```text
-mcp-audit 0.1.0
+mcp-audit 0.1.1
 Scanned demo-mcp
 3 file(s): 1 MCP config file(s) with 7 server(s), 2 MCP server source file(s)
 
@@ -329,7 +329,7 @@ The same servers written safely (`tests/fixtures/py_clean`, `tests/fixtures/ts_c
 produce no findings:
 
 ```text
-mcp-audit 0.1.0
+mcp-audit 0.1.1
 Scanned tests/fixtures/py_clean, tests/fixtures/ts_clean
 2 file(s): 0 MCP config file(s) with 0 server(s), 2 MCP server source file(s)
 
@@ -494,7 +494,7 @@ report as an artifact.
 ```json
 {
   "tool": "mcp-audit",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "targets": [
     "/abs/path/demo-mcp"
   ],
@@ -507,6 +507,7 @@ report as an artifact.
     "server-python/server.py",
     "server-ts/src/index.ts"
   ],
+  "skipped": [],
   "exit_code": 1,
   "summary": {
     "critical": 10,
@@ -535,6 +536,11 @@ report as an artifact.
   ]
 }
 ```
+
+`"skipped"` lists Python files that could not be parsed (`{"path": ..., "reason": "syntax error
+line 12"}`). Such files are never treated as clean: each is also reported on stderr
+(`warning: server.py: syntax error line 12; file not scanned`) and counted in the text header.
+They do not change the exit code.
 
 ## Development
 

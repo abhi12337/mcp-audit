@@ -30,6 +30,7 @@ class ScanResult:
     config_files: list[str] = field(default_factory=list)
     servers_configured: int = 0
     server_files: list[str] = field(default_factory=list)
+    skipped: list[dict] = field(default_factory=list)   # [{"path": ..., "reason": "syntax error line 3"}]
 
 
 def _is_test_file(name: str) -> bool:
@@ -69,7 +70,7 @@ def scan_file(path: Path, rel: str, res: ScanResult, max_bytes: int, force_confi
         res.files_scanned += 1
         if is_mcp_python(text):
             res.server_files.append(rel)
-            res.findings += scan_python(rel, text)
+            res.findings += scan_python(rel, text, res.skipped)   # unparseable files are reported, not dropped
     elif suffix in JS_EXT and not name.endswith((".d.ts", ".min.js")):
         res.files_scanned += 1
         if is_mcp_js(text):
