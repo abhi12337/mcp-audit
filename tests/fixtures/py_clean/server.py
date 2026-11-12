@@ -1,5 +1,6 @@
 """The same notes server written safely. mcp-audit must report nothing here."""
 
+import re
 import ipaddress
 import os
 import shlex
@@ -29,7 +30,10 @@ def _safe_path(name: str) -> Path:
 @mcp.tool()
 def git_log(branch: str) -> str:
     """Show the git log for a branch (no shell, argument list)."""
-    out = subprocess.run(["git", "log", "--oneline", "--", branch], capture_output=True, text=True, timeout=30)
+    if branch.startswith("-") or not re.fullmatch(r"[A-Za-z0-9._/-]+", branch):
+        raise ValueError("invalid branch name")
+    out = subprocess.run(["git", "log", "--oneline", "--end-of-options", branch, "--"],
+                         capture_output=True, text=True, timeout=30)
     return out.stdout
 
 

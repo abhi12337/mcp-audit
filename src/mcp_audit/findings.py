@@ -140,9 +140,12 @@ os.system) lets a prompt injection run any command as the user running the serve
     """
 Do not use a shell. Run a fixed program with an argument list and validate the input:
 
-{py}  Python:  subprocess.run(["git", "log", "--", <param>], shell=False, check=True,
-{py}                          capture_output=True, timeout=30)
-{js}  Node:    execFile("git", ["log", "--", <param>], { shell: false })
+{py}  Python:  subprocess.run(["git", "log", "--end-of-options", <param>, "--"], shell=False,
+{py}                          check=True, capture_output=True, timeout=30)
+{js}  Node:    execFile("git", ["log", "--end-of-options", <param>, "--"], { shell: false })
+
+Also reject values that start with "-" and check them against a strict pattern
+(e.g. ^[A-Za-z0-9._/-]+$ for a branch name).
 
 If a command must be chosen by the model, map an allowlisted name to a fixed argv
 (e.g. {"test": ["npm", "test"]}) instead of accepting a command or program name.

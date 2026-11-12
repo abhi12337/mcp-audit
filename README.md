@@ -425,8 +425,9 @@ mounts; mount one folder (`-v /path/to/project:/workspace:ro`), add `--cap-drop 
 **MCP006 - plain http.** Use the server's `https://` URL.
 
 **MCP101 - shell injection.** No shell. Use an argv list with a fixed program
-(`subprocess.run(["git", "log", "--", branch])`, `execFile("git", ["log", "--", branch])`) and
-map model-chosen actions to an allowlist.
+(`subprocess.run(["git", "log", "--end-of-options", branch, "--"])`,
+`execFile("git", ["log", "--end-of-options", branch, "--"])`), validate the value against a strict
+pattern and reject anything starting with `-`, and map model-chosen actions to an allowlist.
 
 **MCP102 - path traversal.**
 ```python
