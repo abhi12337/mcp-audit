@@ -1,0 +1,32 @@
+# Copy to .github/workflows/mcp-audit.yml in a repo that ships MCP configs or an MCP server.
+# Static only: it reads the checked-out files and never starts or connects to a server.
+name: mcp-audit
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  mcp-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # Pin to a release tag or commit of mcp-audit you have reviewed.
+      - run: pipx install "git+https://github.com/OWNER/mcp-audit@v0.1.0"
+      - name: Audit MCP configs and server code (fails on high/critical)
+        run: mcp-audit scan . --no-color --fail-on high
+      - name: JSON report artifact
+        if: always()
+        run: mcp-audit scan . --json --fail-on never > mcp-audit.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mcp-audit-report
+          path: mcp-audit.json
